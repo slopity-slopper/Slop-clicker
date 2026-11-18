@@ -8,260 +8,381 @@
 <style>
 *{box-sizing:border-box}
 body{
-  margin:0;background:#101014;color:white;
-  font-family:Arial,sans-serif;text-align:center;
+  margin:0;min-height:100vh;
+  background:radial-gradient(circle,#241044,#080510 75%);
+  color:white;font-family:Arial,sans-serif;
+  text-align:center;padding:25px 15px;
 }
-header{padding:22px;color:#d3a2ff;font-size:26px;font-weight:bold}
-.container{max-width:520px;margin:auto;padding:16px}
-.points{font-size:38px;color:#d3a2ff;font-weight:bold;margin:20px}
+#reset{
+  position:absolute;top:7px;right:10px;
+  background:transparent;border:0;color:#624b70;
+  font-size:10px;padding:5px;cursor:pointer;
+}
+h1{color:#d78aff;text-shadow:0 0 15px #a020f0;font-size:38px}
+#score{font-size:30px;font-weight:bold;margin:25px 0}
+#gameArea{
+  position:relative;width:260px;height:260px;
+  margin:30px auto;display:flex;
+  align-items:center;justify-content:center;
+}
 #post{
   width:180px;height:180px;border-radius:50%;
-  border:4px solid #b77bee;background:#7136a8;
-  color:white;font-size:24px;font-weight:bold;
-  cursor:pointer;box-shadow:0 0 25px #7136a855;
+  border:4px solid #d78aff;
+  background:linear-gradient(145deg,#9d26e8,#4b087d);
+  color:white;font-size:25px;font-weight:bold;
+  box-shadow:0 0 25px #a020f0;cursor:pointer;z-index:2;
 }
-#post:disabled{opacity:.5;cursor:not-allowed}
-.tabs{display:flex;gap:10px;margin:25px 0}
+#post:active{transform:scale(.94)}
+#post:disabled{opacity:.65}
+#parryRing{
+  position:absolute;width:180px;height:180px;
+  border:4px solid white;border-radius:50%;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(1.4);
+  z-index:3;cursor:pointer;display:none;
+  animation:parryApproach 3s linear infinite;
+  box-shadow:0 0 12px #ffffff66;
+}
+@keyframes parryApproach{
+  from{transform:translate(-50%,-50%) scale(1.4)}
+  to{transform:translate(-50%,-50%) scale(1)}
+}
+#message{min-height:28px;font-weight:bold;color:#e6a8ff;margin:15px 0}
+.tabs{display:flex;justify-content:center;gap:10px;margin:25px 0}
 .tabs button,.buy{
-  flex:1;padding:14px;border:1px solid #7545a0;
-  border-radius:10px;background:#211a2b;color:white;
+  background:#321052;border:2px solid #b44cff;
+  border-radius:10px;color:white;padding:12px 18px;
   font-weight:bold;cursor:pointer;
 }
-.tabs button.active,.buy{background:#7136a8}
 .panel{
-  background:#211a2b;padding:20px;border-radius:14px;
-  margin-top:12px;text-align:left;
+  max-width:420px;margin:auto;background:#160c25;
+  border:1px solid #672c91;border-radius:15px;padding:18px;
 }
-.panel h3{color:#d3a2ff;margin-top:0}
-.panel p{color:#bbb;line-height:1.5}
-.hidden{display:none}
-#message{color:#d3a2ff;min-height:24px;margin:12px}
-#parryStage{
-  height:210px;position:relative;overflow:hidden;
-  margin-top:20px;border-radius:14px;
-  background:#17121f;border:1px solid #49305f;
+.item{background:#241238;border-radius:10px;padding:15px;margin:12px 0}
+.item h3{margin-top:0;color:#d78aff}
+.buy:disabled{opacity:.4;cursor:not-allowed}
+.hidden{display:none!important}
+.boost{color:#62ff9b!important}
+.cooldown{color:#ff7777!important}
+#resetModal{
+  position:fixed;inset:0;background:#000b;
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;
 }
-#parryTarget{
-  position:absolute;width:180px;height:180px;
-  border-radius:50%;border:4px solid #b77bee;
-  left:50%;top:50%;transform:translate(-50%,-50%);
-  background:#7136a8;pointer-events:none;
+#resetBox{
+  background:#1b0d2b;border:2px solid #b44cff;
+  border-radius:15px;padding:25px;width:85%;
+  max-width:320px;box-shadow:0 0 25px #a020f0;
 }
-#parryRing{
-  position:absolute;width:30px;height:30px;
-  border:3px solid white;border-radius:50%;
-  top:50%;left:calc(100% - 28px);
-  transform:translateY(-50%);
-  cursor:pointer;z-index:3;
-  animation:approach 1.6s linear infinite;
+#resetBox h2{color:#d78aff}
+#resetBox button{
+  padding:12px 22px;margin:8px;border-radius:8px;
+  border:1px solid #d78aff;background:#321052;
+  color:white;font-weight:bold;cursor:pointer;
 }
-@keyframes approach{
-  from{left:calc(100% - 28px)}
-  to{left:calc(50% + 88px)}
-}
-.status{color:#aaa;font-size:13px;margin-top:12px}
+#confirmReset{background:#7d1748!important}
 </style>
 </head>
 <body>
 
-<header>SLOP CLICKER</header>
+<button id="reset">Apagar progresso</button>
 
-<div class="container">
-  <div>SEUS SLOP POINTS</div>
-  <div class="points" id="points">0</div>
+<h1>SLOP CLICKER</h1>
+<div id="score">0 SLOPS</div>
 
+<div id="gameArea">
   <button id="post">POST<br>SLOP</button>
-  <div id="message">Clique para ganhar pontos!</div>
+  <div id="parryRing"></div>
+</div>
 
-  <div class="tabs">
-    <button id="shopTab" class="active">LOJA</button>
-    <button id="otherTab">OUTROS ITENS</button>
+<div id="message">Clique para ganhar SLOPS!</div>
+
+<div class="tabs">
+  <button id="shopTab">LOJA</button>
+  <button id="otherTab">OUTROS ITENS</button>
+</div>
+
+<div id="shop" class="panel">
+  <h2>LOJA</h2>
+
+  <div class="item">
+    <h3>BOT</h3>
+    <p id="botInfo">Nível 0</p>
+    <p id="botPrice">Preço: 50 SLOPS</p>
+    <button class="buy" id="buyBot">COMPRAR BOT</button>
   </div>
 
-  <section id="shop">
-    <div class="panel">
-      <h3>BOT</h3>
-      <p>Gera pontos automaticamente.</p>
-      <p id="botInfo">Nível 0 — ainda não comprado</p>
-      <button class="buy" id="buyBot">COMPRAR — 50 SLOP</button>
-    </div>
-  </section>
+  <div class="item">
+    <h3>UPGRADE DE CLIQUE DO BOT</h3>
+    <p id="botClickInfo">0/5 melhorias</p>
+    <p id="botClickPrice">Desbloqueia depois do BOT nível 5</p>
+    <button class="buy" id="buyBotClick" disabled>COMPRAR UPGRADE</button>
+  </div>
 
-  <section id="otherItems" class="hidden">
-    <div class="panel">
-      <h3>PARRY</h3>
-      <p>Acerte o círculo no momento certo para ganhar 5x pontos por 10 segundos.</p>
-      <p>Preço: <b>1.250 SLOP</b></p>
-      <button class="buy" id="buyParry">COMPRAR PARRY</button>
-      <div id="parryStatus" class="status"></div>
-    </div>
-  </section>
+  <div class="item">
+    <h3>MAIS SLOPS</h3>
+    <p id="clickInfo">+1 SLOP por clique</p>
+    <p id="clickPrice">Preço: 25 SLOPS</p>
+    <button class="buy" id="buyClick">COMPRAR</button>
+  </div>
+</div>
 
-  <section id="parryArea" class="hidden">
-    <div class="panel">
-      <h3>PARRY</h3>
-      <p>Toque no círculo vazado quando ele se aproximar da bola principal!</p>
-      <div id="parryStage">
-        <div id="parryTarget"></div>
-        <div id="parryRing"></div>
-      </div>
-      <div class="status" id="parryHint">Aguarde o momento certo.</div>
-    </div>
-  </section>
+<div id="otherItems" class="panel hidden">
+  <h2>OUTROS ITENS</h2>
+  <div class="item">
+    <h3>PARRY</h3>
+    <p>Ative um desafio de timing para ganhar 5x pontos por 10 segundos!</p>
+    <p>Preço: 1.000 SLOPS</p>
+    <button class="buy" id="buyParry">COMPRAR PARRY</button>
+    <p id="parryInfo"></p>
+  </div>
+</div>
 
-  <div class="status">Seu progresso fica salvo neste navegador.</div>
+<div id="resetModal" class="hidden">
+  <div id="resetBox">
+    <h2>Tem certeza?</h2>
+    <p>Você quer apagar TODO o seu progresso?</p>
+    <button id="confirmReset">SIM</button>
+    <button id="cancelReset">NÃO</button>
+  </div>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
+function readNumber(key,fallback){
+  const value=Number(localStorage.getItem(key));
+  return Number.isSafeInteger(value)&&value>=0?value:fallback;
+}
 
-let points = Number(localStorage.getItem("slopPoints")) || 0;
-let botLevel = Number(localStorage.getItem("slopBot")) || 0;
-let hasParry = localStorage.getItem("slopParry") === "true";
-let boostUntil = 0;
+let points=readNumber("slopPoints",0);
+let botLevel=Math.min(5,readNumber("slopBot",0));
+let botClickLevel=Math.min(5,readNumber("slopBotClick",0));
+let clickLevel=readNumber("slopClick",0);
+let hasParry=localStorage.getItem("slopParry")==="true";
 
-const botPrices = [50,100,200,400];
-const botIntervals = [2000,1500,1000,500,250];
+let boostUntil=0;
+let parryCooldownUntil=0;
+let parryReadyMessage=false;
+
+const PARRY_PRICE=1000;
+const botPrices=[50,100,200,400];
+const botIntervals=[2000,1500,1000,500,250];
+const botClickPrices=[500,1000,2000,4000,8000];
+
+const score=document.getElementById("score");
+const post=document.getElementById("post");
+const ring=document.getElementById("parryRing");
+const message=document.getElementById("message");
+
+function clickPrice(){
+  return 25*(clickLevel+1);
+}
+
+function totalClickPower(){
+  return 1+clickLevel+botClickLevel;
+}
 
 function save(){
   localStorage.setItem("slopPoints",points);
   localStorage.setItem("slopBot",botLevel);
+  localStorage.setItem("slopBotClick",botClickLevel);
+  localStorage.setItem("slopClick",clickLevel);
   localStorage.setItem("slopParry",hasParry);
 }
 
 function update(){
-  $("points").textContent = points.toLocaleString("pt-BR");
-  $("post").disabled = hasParry && Date.now() >= boostUntil;
+  score.textContent=Math.floor(points)+" SLOPS";
 
-  if(botLevel === 0){
-    $("botInfo").textContent = "Nível 0 — ainda não comprado";
-    $("buyBot").textContent = "COMPRAR — 50 SLOP";
+  document.getElementById("botInfo").textContent=
+    "Nível "+botLevel+"/5 — +"+botLevel+" SLOPS automáticos por intervalo";
+
+  document.getElementById("botPrice").textContent=
+    botLevel>=5?"BOT NO MÁXIMO":
+    "Preço: "+botPrices[botLevel]+" SLOPS";
+
+  document.getElementById("buyBot").disabled=
+    botLevel>=5||points<botPrices[botLevel];
+
+  document.getElementById("botClickInfo").textContent=
+    botClickLevel+"/5 melhorias — poder total: "+totalClickPower()+" por clique";
+
+  if(botLevel<5){
+    document.getElementById("botClickPrice").textContent=
+      "Desbloqueia depois do BOT nível 5";
+  }else if(botClickLevel>=5){
+    document.getElementById("botClickPrice").textContent=
+      "UPGRADE DE CLIQUE NO MÁXIMO!";
   }else{
-    $("botInfo").textContent =
-      "Nível "+botLevel+" — +1 ponto a cada "+
-      (botIntervals[botLevel-1]/1000)+" segundos";
-
-    $("buyBot").textContent = botLevel >= 5
-      ? "NÍVEL MÁXIMO"
-      : "MELHORAR — "+botPrices[botLevel]+" SLOP";
+    document.getElementById("botClickPrice").textContent=
+      "Preço: "+botClickPrices[botClickLevel]+" SLOPS";
   }
 
-  $("buyBot").disabled =
-    botLevel >= 5 || points < (botPrices[botLevel] || 0);
+  document.getElementById("buyBotClick").disabled=
+    botLevel<5||botClickLevel>=5||
+    points<botClickPrices[botClickLevel];
 
-  $("buyParry").textContent = hasParry
-    ? "PARRY COMPRADO"
-    : "COMPRAR — 1.250 SLOP";
+  document.getElementById("clickInfo").textContent=
+    "+"+totalClickPower()+" SLOPS por clique";
 
-  $("buyParry").disabled = hasParry || points < 1250;
+  document.getElementById("clickPrice").textContent=
+    "Preço: "+clickPrice()+" SLOPS";
 
-  if(hasParry){
-    $("parryArea").classList.remove("hidden");
-    $("parryStatus").textContent = "PARRY adquirido!";
-  }
+  document.getElementById("buyClick").disabled=
+    points<clickPrice();
 
-  if(Date.now() < boostUntil){
-    $("message").textContent =
-      "BOOST 5X! "+Math.ceil((boostUntil-Date.now())/1000)+"s restantes";
-    $("post").disabled = false;
+  document.getElementById("buyParry").disabled=
+    hasParry||points<PARRY_PRICE;
+
+  document.getElementById("parryInfo").textContent=
+    hasParry?"PARRY COMPRADO!":"Ainda não comprado.";
+
+  const now=Date.now();
+
+  if(boostUntil>now){
+    post.disabled=false;
+    ring.style.display="none";
+    message.className="boost";
+    message.textContent=
+      "BOOST 5X! "+Math.ceil((boostUntil-now)/1000)+"s restantes";
+  }else if(hasParry&&parryCooldownUntil>now){
+    post.disabled=true;
+    ring.style.display="block";
+    message.className="cooldown";
+    message.textContent=
+      "ERROU! ESPERE "+Math.ceil((parryCooldownUntil-now)/1000)+" SEGUNDO(S)";
   }else if(hasParry){
-    $("message").textContent =
-      "Acerte o PARRY para liberar os cliques!";
-    $("post").disabled = true;
+    post.disabled=true;
+    ring.style.display="block";
+    message.className="";
+    message.textContent=parryReadyMessage?
+      "PODE TENTAR NOVAMENTE!":
+      "TOQUE NO CÍRCULO NO MOMENTO CERTO!";
+  }else{
+    post.disabled=false;
+    ring.style.display="none";
+    message.className="";
+    message.textContent="Clique para ganhar SLOPS!";
   }
 
   save();
 }
 
-$("post").onclick = () => {
-  if(hasParry && Date.now() >= boostUntil) return;
+post.onclick=()=>{
+  if(hasParry&&Date.now()>=boostUntil)return;
 
-  points += Date.now() < boostUntil ? 5 : 1;
+  points+=Date.now()<boostUntil?
+    5*totalClickPower():totalClickPower();
+
   update();
 };
 
-$("buyBot").onclick = () => {
-  if(botLevel >= 5) return;
-  const price = botPrices[botLevel];
-  if(points < price) return;
+document.getElementById("buyBot").onclick=()=>{
+  if(botLevel>=5)return;
 
-  points -= price;
+  const price=botPrices[botLevel];
+  if(points<price)return;
+
+  points-=price;
   botLevel++;
   update();
 
-  if(botLevel === 1){
-    startBot();
-  }
+  if(botLevel===1)startBot();
 };
 
-function startBot(){
-  if(botLevel === 0) return;
-  clearTimeout(window.botTimer);
+document.getElementById("buyBotClick").onclick=()=>{
+  if(botLevel<5||botClickLevel>=5)return;
 
-  window.botTimer = setTimeout(() => {
-    points++;
-    update();
-    startBot();
-  }, botIntervals[botLevel-1]);
-}
+  const price=botClickPrices[botClickLevel];
+  if(points<price)return;
 
-$("buyParry").onclick = () => {
-  if(hasParry || points < 1250) return;
-
-  points -= 1250;
-  hasParry = true;
-  $("parryArea").classList.remove("hidden");
-  $("parryHint").textContent = "Aguarde o círculo se aproximar!";
+  points-=price;
+  botClickLevel++;
   update();
 };
 
-$("parryRing").onclick = () => {
-  if(!hasParry || Date.now() < boostUntil) return;
+document.getElementById("buyClick").onclick=()=>{
+  const price=clickPrice();
+  if(points<price)return;
 
-  const ring = $("parryRing").getBoundingClientRect();
-  const target = $("parryTarget").getBoundingClientRect();
+  points-=price;
+  clickLevel++;
+  update();
+};
 
-  const ringX = ring.left + ring.width/2;
-  const ringY = ring.top + ring.height/2;
-  const targetX = target.left + target.width/2;
-  const targetY = target.top + target.height/2;
+document.getElementById("buyParry").onclick=()=>{
+  if(hasParry||points<PARRY_PRICE)return;
 
-  const distance = Math.hypot(ringX-targetX,ringY-targetY);
-  const idealDistance = target.width/2 + ring.width/2;
+  points-=PARRY_PRICE;
+  hasParry=true;
+  update();
+};
 
-  if(Math.abs(distance-idealDistance) <= 20){
-    boostUntil = Date.now()+10000;
-    $("parryHint").textContent = "ACERTOU! BOOST 5X ATIVADO!";
-    $("message").textContent = "BOOST 5X ATIVADO!";
+function startBot(){
+  if(botLevel<=0)return;
+
+  setTimeout(()=>{
+    points+=botLevel;
     update();
+    startBot();
+  },botIntervals[botLevel-1]);
+}
+
+ring.onclick=()=>{
+  if(!hasParry||
+     Date.now()<parryCooldownUntil||
+     Date.now()<boostUntil)return;
+
+  parryReadyMessage=false;
+
+  const ringSize=ring.getBoundingClientRect().width;
+  const targetSize=post.getBoundingClientRect().width;
+  const difference=Math.abs(ringSize-targetSize);
+
+  if(difference<=14){
+    boostUntil=Date.now()+10000;
+    parryCooldownUntil=0;
   }else{
-    $("parryHint").textContent = "Ainda não! Acerte o momento certo.";
+    parryCooldownUntil=Date.now()+2000;
   }
+
+  update();
 };
 
-$("shopTab").onclick = () => {
-  $("shop").classList.remove("hidden");
-  $("otherItems").classList.add("hidden");
-  $("shopTab").classList.add("active");
-  $("otherTab").classList.remove("active");
+document.getElementById("reset").onclick=()=>{
+  document.getElementById("resetModal").classList.remove("hidden");
 };
 
-$("otherTab").onclick = () => {
-  $("shop").classList.add("hidden");
-  $("otherItems").classList.remove("hidden");
-  $("shopTab").classList.remove("active");
-  $("otherTab").classList.add("active");
+document.getElementById("cancelReset").onclick=()=>{
+  document.getElementById("resetModal").classList.add("hidden");
 };
 
-setInterval(() => {
-  if(boostUntil && Date.now() >= boostUntil){
-    boostUntil = 0;
-    $("parryHint").textContent = "Boost encerrado! Acerte novamente.";
-    update();
+document.getElementById("confirmReset").onclick=()=>{
+  localStorage.removeItem("slopPoints");
+  localStorage.removeItem("slopBot");
+  localStorage.removeItem("slopBotClick");
+  localStorage.removeItem("slopClick");
+  localStorage.removeItem("slopParry");
+  location.reload();
+};
+
+document.getElementById("shopTab").onclick=()=>{
+  document.getElementById("shop").classList.remove("hidden");
+  document.getElementById("otherItems").classList.add("hidden");
+};
+
+document.getElementById("otherTab").onclick=()=>{
+  document.getElementById("shop").classList.add("hidden");
+  document.getElementById("otherItems").classList.remove("hidden");
+};
+
+setInterval(()=>{
+  if(hasParry&&parryCooldownUntil>0&&Date.now()>=parryCooldownUntil){
+    parryCooldownUntil=0;
+    parryReadyMessage=true;
   }
+  update();
 },100);
 
-if(botLevel > 0) startBot();
+if(botLevel>0)startBot();
 update();
 </script>
 </body>
